@@ -3,3 +3,6 @@ backup/
 outout/*
 .DS_Store
 .ipynb_checkpoints/
+data/*
+checkpoints/
+__pycache__/
