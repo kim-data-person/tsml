@@ -1,6 +1,6 @@
 # Exclude backup and test files
 backup/
-outout/*
+output/
 .DS_Store
 .ipynb_checkpoints/
 checkpoints/
