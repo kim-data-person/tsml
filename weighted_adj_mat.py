@@ -3,13 +3,13 @@ import pandas as pd
 import pickle
 import math
 
-def load_data():
+def load_prefecture_coordinates_data():
 
     # Load the prefecture coordinates
     coordinates = pd.read_csv('data/japanese_prefectures_coordinates.csv').set_index('Prefecture')
 
     # Load the cleaned data
-    with open('data/cleaned_data.pkl', 'rb') as f:
+    with open('output/cleaned_data.pkl', 'rb') as f:
         df = pickle.load(f)
 
     # Get the list of prefecture names
@@ -31,19 +31,19 @@ def get_distance_km(diff_lat_degree, diff_long_degree):
     return distance_km
 
 # Define the matrix weight using distance
-def get_weight(distance_km, sigma=100, epsilon=10e-5):
+def get_weight(distance_km, sigma, epsilon):
     weight = np.exp(-distance_km**2 / sigma**2)
     if weight < epsilon:
         return 0
     else:
         return weight
     
-def create_adjacency_matrix(coordinates, prefecture_names):
-    # Create an empty adjacency matrix
-    A_adj = np.zeros((len(prefecture_names), len(prefecture_names)))
+def create_weighted_adjacency_matrix(coordinates, prefecture_names, sigma, epsilon):
+    # Create an empty weighted adjacency matrix
+    W = np.zeros((len(prefecture_names), len(prefecture_names)))
 
-    for i in range(A_adj.shape[0]):
-        for j in range(A_adj.shape[0]):
+    for i in range(W.shape[0]):
+        for j in range(W.shape[0]):
             if i != j:
                 lat1 = coordinates.loc[prefecture_names[i]]['Latitude']
                 long1 = coordinates.loc[prefecture_names[i]]['Longitude']
@@ -51,14 +51,15 @@ def create_adjacency_matrix(coordinates, prefecture_names):
                 long2 = coordinates.loc[prefecture_names[j]]['Longitude']
 
                 distance_km = get_distance_km(lat1-lat2, long1-long2)
-                A_adj[i, j] = get_weight(distance_km, sigma=100, epsilon=10e-4)
+                W[i, j] = get_weight(distance_km, sigma, epsilon)
 
-    return A_adj
+    W = W.astype(np.float32)
 
 
-if __name__ == "__main__":
-    coordinates, prefecture_names = load_data()
-    A_adj = create_adjacency_matrix(coordinates, prefecture_names)
+    return W
 
-    with open('output/adjacency_matrix.pkl', 'wb') as f:
-        pickle.dump(A_adj, f)
+def get_weighted_adjacency_matrix(sigma=100, epsilon=10e-4):
+    coordinates, prefecture_names = load_prefecture_coordinates_data()
+    W = create_weighted_adjacency_matrix(coordinates, prefecture_names, sigma, epsilon)
+
+    return W, prefecture_names
