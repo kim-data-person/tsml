@@ -112,8 +112,8 @@ class STGCN(nn.Module):
     Input should have shape (batch_size, num_nodes, num_input_time_steps,
     num_features).
 
-    Input is (207, 2, 12, 3)
-    Output shape (207, 3)
+    Input shape (num_nodes, num_features, num_timestamp_input, num_timestamp_output)
+    Output shape (num_nodes, num_timestamp_output)
     """
 
     def __init__(self, num_nodes, num_features, num_timesteps_input,
@@ -146,6 +146,8 @@ class STGCN(nn.Module):
                                        dropout_rate=dropout_rate)
         self.dropout1 = nn.Dropout(dropout_rate)
         self.fully = nn.Linear((num_timesteps_input - 2*5) * 16, num_timesteps_output)
+        # TODO: change the output shape to (num_timesteps_output, num_features) This makes error now.
+        # self.fully = nn.Linear((num_timesteps_input - 2*5) * 16, (num_timesteps_output, num_features))
         self.dropout2 = nn.Dropout(dropout_rate)
 
     def forward(self, A_hat, X):
